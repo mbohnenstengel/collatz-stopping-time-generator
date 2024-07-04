@@ -1,0 +1,167 @@
+import java.time.Duration;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.concurrent.locks.ReentrantLock;
+
+
+public class MTCollatz {
+    public static void main(String[] args) {
+    
+        boolean useLock = false;
+        
+        // if(args.length > 3 ){
+        //     System.err.println("Please provide input values for stoping number and number of threads");
+        //     System.exit(0); 
+        //     }
+
+        // int numberOfStoppingTimes = Integer.parseInt(args[0]);
+        // int threadNumber = Integer.parseInt(args[1]);
+
+        // if(args.length == 3 && args[2].equals("[-nolock]"))
+        // {
+        //     useLock = false;
+        // }else{
+        //     useLock = true;
+        // }
+
+        // if(numberOfStoppingTimes <= 0 || threads <= 0 || threads > 6){
+        //     System.err.println("Stoping number and number of threads must be greater than 0 ");
+        //     System.exit(1); 
+        // }
+
+        int numberOfStoppingTimes = Integer.parseInt("10");
+        int threadNumber = Integer.parseInt("3");
+
+    
+        SharedHistogram histogram = new SharedHistogram();
+        StoppingTimeNumberToCalculate  stoppingTimeNumberToCalculate =  new StoppingTimeNumberToCalculate(numberOfStoppingTimes);
+        Thread[] threads = new Thread[threadNumber];
+
+        // Create and start each thread with input parameters
+        Task task = new Task(histogram, stoppingTimeNumberToCalculate, numberOfStoppingTimes, useLock);
+        for (int i = 0; i < threadNumber; i++) {
+            threads[i] = new Thread(task);
+            threads[i].start();
+        }
+
+        // Join threads to ensure main thread waits for their completion
+        for (int i = 0; i < threadNumber; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("All threads have finished execution.");
+
+
+
+    }// public static void main args
+
+}
+
+
+
+class SharedHistogram {
+
+    private HashMap<Integer, Integer> histogram = new HashMap<Integer, Integer>();
+
+    public void setDataPoint (int n, int stoppingTime){
+        if(histogram.get(n) == null){
+            histogram.put(n,stoppingTime);
+        }else {
+            int count = histogram.get(n);
+            histogram.put(n, count++);
+        }
+    }
+
+    public HashMap<Integer, Integer> getHashMap (){
+        return histogram;
+    }
+
+    public void print (){
+        // TODO PRINT
+    }
+
+}
+
+class StoppingTimeNumberToCalculate {
+    private int currentStoppingTimeNumber;
+
+    public StoppingTimeNumberToCalculate (int n){
+        currentStoppingTimeNumber = n;
+    }
+    public int getN(){
+        return  currentStoppingTimeNumber;
+    }
+    public void incrementN(){
+        currentStoppingTimeNumber++;
+    };
+}
+
+static int computeStoppingTime (int initVal){
+    int n = initVal;
+    int counter = 0;
+
+    while(n != 1){
+        if(n == 1) break;
+        if(n%2 == 0){
+            n = n/2;
+        }else {
+            n = (3 * n) + 1;
+        }
+        counter++;
+    }
+    return counter;
+}
+
+
+class Task implements Runnable {
+    private SharedHistogram histrogram;
+    private StoppingTimeNumberToCalculate stoppingTimeNumberToCalculate;
+    private boolean useLock;
+    private ReentrantLock lock = new ReentrantLock();
+    int numberOfStoppingTimes;
+
+ 
+    public Task(SharedHistogram histogram, StoppingTimeNumberToCalculate stoppingTimeNumberToCalculate, int numberOfStoppingTimes, boolean useLock) {
+        this.histrogram = histogram;
+        this.stoppingTimeNumberToCalculate = stoppingTimeNumberToCalculate;
+        this.useLock = useLock;
+        this.numberOfStoppingTimes = numberOfStoppingTimes;
+    }
+
+    @Override
+    public void run() {
+        int numberToCalc;
+        int stoppingTimeOfN = 0;
+
+        if (useLock){
+
+            try{
+            this.lock.lock();
+            numberToCalc = stoppingTimeNumberToCalculate.getN();
+            this.lock.unlock();
+
+            while(numberOfStoppingTimes > numberToCalc)
+            stoppingTimeOfN = computeStoppingTime(numberToCalc);
+            this.lock.lock();
+            histrogram.setDataPoint(numberToCalc, stoppingTimeOfN);
+            }finally{
+                this.lock.unlock();
+            }
+
+        }else{
+            numberToCalc = stoppingTimeNumberToCalculate.getN();
+            while(numberOfStoppingTimes > numberToCalc){
+                stoppingTimeOfN = computeStoppingTime(numberToCalc);
+                histrogram.setDataPoint(numberToCalc, stoppingTimeOfN);
+            }
+        }
+
+    }
+}
+
+
+
