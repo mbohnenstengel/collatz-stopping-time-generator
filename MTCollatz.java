@@ -7,7 +7,7 @@ import java.time.Instant;
 
 public class MTCollatz {
     public static void main(String[] args) {
-        boolean useLock = false;
+        boolean useLock = true;
         
         if(args.length > 3 ){
             System.err.println("Please provide input values for stoping number and number of threads");
@@ -17,14 +17,12 @@ public class MTCollatz {
         int numberOfStoppingTimes = Integer.parseInt(args[0]);
         int threadNumber = Integer.parseInt(args[1]);
 
-        if(args.length == 3 && args[2].equals("[-nolock]"))
+        if(args.length == 3 && args[2].equals("-nolock"))
         {
             useLock = false;
-        }else{
-            useLock = true;
         }
 
-        if(numberOfStoppingTimes <= 0 || threadNumber <= 0 || threadNumber > 6){
+        if(numberOfStoppingTimes <= 0 || threadNumber <= 0 || threadNumber > 20){ // TODO: verify thread number (example shows 8)
             System.err.println("Stoping number and number of threads must be greater than 0 ");
             System.exit(1); 
         }
@@ -64,7 +62,7 @@ class SharedHistogram {
 
     int count;
     public synchronized void setDataPoint(int stoppingTime) {
-        System.out.println(histogram.get(stoppingTime));
+        // System.out.println(histogram.get(stoppingTime));
         if(histogram.get(stoppingTime) == null){
             histogram.put(stoppingTime, 1);
         }else {
@@ -115,17 +113,18 @@ class Task implements Runnable {
         this.useLock = useLock;
         this.numberOfStoppingTimes = numberOfStoppingTimes;
     }
-// TODO How is histogram set up??
+
     @Override
     public void run() {
         int numberToCalc;
         int stoppingTimeOfN;
 
         while(true){
-            if(useLock){
-                System.out.println("Lock enabled for printing stoping time calculations");
+            if(useLock){ // should I have a try catch here? or somewhere else
+                // System.out.println("Lock enabled for printing stoping time calculations");
+                lock.lock();
                 try{
-                        lock.lock();
+                       
                         numberToCalc = stoppingTimeNumberToCalculate.getN();
                         stoppingTimeNumberToCalculate.incrementN();
                 }finally{
@@ -136,14 +135,15 @@ class Task implements Runnable {
                 stoppingTimeNumberToCalculate.incrementN();
             }
 
-            System.out.printf("number to calc: %d \n", numberToCalc );
-            System.out.printf("should break?: %s \n", numberOfStoppingTimes < numberToCalc );
+            // System.out.printf("number to calc: %d \n", numberToCalc );
+            // System.out.printf("should break?: %s \n", numberOfStoppingTimes < numberToCalc );
             if(numberOfStoppingTimes < numberToCalc) break;
             stoppingTimeOfN = computeStoppingTime(numberToCalc);
 
             if(useLock){
+                lock.lock();
                 try{
-                    lock.lock();
+                    
                     histogram.setDataPoint(stoppingTimeOfN);
                 
                 }finally{
@@ -160,7 +160,7 @@ class Task implements Runnable {
 
     static int computeStoppingTime(int initVal) {
 
-        System.out.printf("computing for stopping time for: %d \n", initVal);
+        // System.out.printf("computing for stopping time for: %d \n", initVal);
         int n = initVal;
         int counter = 0;
 
@@ -172,7 +172,7 @@ class Task implements Runnable {
             }
             counter++;
         }
-        System.out.printf("Stopping time for the number %d, is: %d \n", initVal, counter);
+        // System.out.printf("Stopping time for the number %d, is: %d \n", initVal, counter);
         return counter;
     }
 }
