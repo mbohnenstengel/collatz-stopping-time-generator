@@ -85,7 +85,6 @@ class SharedHistogram {
 class StoppingTimeNumberToCalculate {
     private int currentStoppingTimeNumber;
 
-
     public StoppingTimeNumberToCalculate() {
         currentStoppingTimeNumber =  1;
     }
@@ -103,30 +102,35 @@ class StoppingTimeNumberToCalculate {
 class Task implements Runnable {
     private SharedHistogram histogram;
     private StoppingTimeNumberToCalculate stoppingTimeNumberToCalculate;
-    private boolean useLock;
-    private ReentrantLock lock = new ReentrantLock();
     private int numberOfStoppingTimes;
+    private boolean useLock;
+    private int treadNum;
 
-    public Task(SharedHistogram histogram, StoppingTimeNumberToCalculate stoppingTimeNumberToCalculate, int numberOfStoppingTimes, boolean useLock) {
+    private ReentrantLock lock = new ReentrantLock();
+    
+    public Task(SharedHistogram histogram, StoppingTimeNumberToCalculate stoppingTimeNumberToCalculate, int numberOfStoppingTimes, boolean useLock, int treadNum) {
         this.histogram = histogram;
         this.stoppingTimeNumberToCalculate = stoppingTimeNumberToCalculate;
-        this.useLock = useLock;
         this.numberOfStoppingTimes = numberOfStoppingTimes;
+        this.useLock = useLock;
+        this.treadNum = treadNum;
     }
 
     @Override
     public void run() {
-        int numberToCalc;
-        int stoppingTimeOfN;
+        int numberToCalc = 1;
+        int stoppingTimeOfN = 1;
 
         while(true){
             if(useLock){ // should I have a try catch here? or somewhere else
                 // System.out.println("Lock enabled for printing stoping time calculations");
                 lock.lock();
                 try{
-                       
                         numberToCalc = stoppingTimeNumberToCalculate.getN();
                         stoppingTimeNumberToCalculate.incrementN();
+                }catch(Exception e){
+                    e.printStackTrace();
+                    
                 }finally{
                     lock.unlock();
                 }
@@ -135,8 +139,9 @@ class Task implements Runnable {
                 stoppingTimeNumberToCalculate.incrementN();
             }
 
-            // System.out.printf("number to calc: %d \n", numberToCalc );
-            // System.out.printf("should break?: %s \n", numberOfStoppingTimes < numberToCalc );
+            System.out.printf("number to calc: %d \n", numberToCalc );
+            System.out.printf("thread num: %d \n", treadNum );
+            System.out.printf("should break?: %s \n", numberOfStoppingTimes < numberToCalc );
             if(numberOfStoppingTimes < numberToCalc) break;
             stoppingTimeOfN = computeStoppingTime(numberToCalc);
 
@@ -146,6 +151,9 @@ class Task implements Runnable {
                     
                     histogram.setDataPoint(stoppingTimeOfN);
                 
+                }catch(Exception e){
+                    e.printStackTrace();
+                    
                 }finally{
                     lock.unlock();
                     
@@ -172,7 +180,10 @@ class Task implements Runnable {
             }
             counter++;
         }
-        // System.out.printf("Stopping time for the number %d, is: %d \n", initVal, counter);
+        if(initVal % 1000 == 0){
+            System.out.printf("Stopping time for the number %d, is: %d \n", initVal, counter);
+        }
+        
         return counter;
     }
 }
