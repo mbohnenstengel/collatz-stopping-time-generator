@@ -31,11 +31,11 @@ public class MTCollatz {
         StoppingTimeNumberToCalculate stoppingTimeNumberToCalculate = new StoppingTimeNumberToCalculate();
         Thread[] threads = new Thread[threadNumber];
 
-        Task task = new Task(histogram, stoppingTimeNumberToCalculate, numberOfStoppingTimes, useLock);
         Instant startTime = Instant.now();
 
         for (int i = 0; i < threadNumber; i++) {
-            System.out.printf("Creating thread %d \n", i);
+            Task task = new Task(histogram, stoppingTimeNumberToCalculate, numberOfStoppingTimes, useLock, i);
+            // System.out.printf("Creating thread %d \n", i);
             threads[i] = new Thread(task);
             threads[i].start();
         }
@@ -51,8 +51,8 @@ public class MTCollatz {
         Instant endTime = Instant.now();
         Duration duration = Duration.between(startTime, endTime);
         System.out.println("All threads have finished execution.");
-        System.out.println("Results");
-        histogram.print();
+        // System.out.println("Results");
+        // histogram.print();
         System.out.println("Total execution time: " + duration.toMillis() + " milliseconds");
         
     }
@@ -86,7 +86,7 @@ class StoppingTimeNumberToCalculate {
     private int currentStoppingTimeNumber;
 
     public StoppingTimeNumberToCalculate() {
-        currentStoppingTimeNumber =  1;
+        currentStoppingTimeNumber =  113380;
     }
 
     public int getN() {
@@ -139,10 +139,9 @@ class Task implements Runnable {
                 stoppingTimeNumberToCalculate.incrementN();
             }
 
-            System.out.printf("number to calc: %d \n", numberToCalc );
-            System.out.printf("thread num: %d \n", treadNum );
-            System.out.printf("should break?: %s \n", numberOfStoppingTimes < numberToCalc );
+            // System.out.printf("should break?: %s \n", numberOfStoppingTimes < numberToCalc );
             if(numberOfStoppingTimes < numberToCalc) break;
+            // System.out.printf("number to calc: %d, using tread: %d\n", numberToCalc, treadNum);
             stoppingTimeOfN = computeStoppingTime(numberToCalc);
 
             if(useLock){
@@ -167,9 +166,7 @@ class Task implements Runnable {
     }
 
     static int computeStoppingTime(int initVal) {
-
-        // System.out.printf("computing for stopping time for: %d \n", initVal);
-        int n = initVal;
+        Long n = Long.valueOf(initVal);
         int counter = 0;
 
         while (n != 1) {
@@ -179,11 +176,7 @@ class Task implements Runnable {
                 n = (3 * n) + 1;
             }
             counter++;
-        }
-        if(initVal % 1000 == 0){
-            System.out.printf("Stopping time for the number %d, is: %d \n", initVal, counter);
-        }
-        
+        } 
         return counter;
     }
 }
