@@ -22,7 +22,7 @@ public class MTCollatz {
             useLock = false;
         }
 
-        if(numberOfStoppingTimes <= 0 || threadNumber <= 0 || threadNumber > 20){ // TODO: verify thread number (example shows 8)
+        if(numberOfStoppingTimes <= 0 || threadNumber <= 0 || threadNumber > 8){ // TODO: verify thread number (example shows 8)
             System.err.println("Stoping number and number of threads must be greater than 0 ");
             System.exit(1); 
         }
@@ -52,7 +52,7 @@ public class MTCollatz {
         Duration duration = Duration.between(startTime, endTime);
         System.out.println("All threads have finished execution.");
         // System.out.println("Results");
-        // histogram.print();
+        histogram.print();
         System.out.println("Total execution time: " + duration.toMillis() + " milliseconds");
         
     }
@@ -76,8 +76,9 @@ class SharedHistogram {
     }
 
     public void print() {
+        System.out.println("Stoppingtime, Frequency");
         for (Map.Entry<Integer, Integer> entry : histogram.entrySet()) {
-            System.out.println(entry.getKey() + " -> " + entry.getValue());
+            System.out.println(entry.getKey() + "," + entry.getValue());
         }
     }
 }
@@ -86,7 +87,7 @@ class StoppingTimeNumberToCalculate {
     private int currentStoppingTimeNumber;
 
     public StoppingTimeNumberToCalculate() {
-        currentStoppingTimeNumber =  113380;
+        currentStoppingTimeNumber =  1;
     }
 
     public int getN() {
