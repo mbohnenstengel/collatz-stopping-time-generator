@@ -57,9 +57,8 @@ public class MTCollatz {
 
         Instant endTime = Instant.now();
         Duration duration = Duration.between(startTime, endTime);
-        System.out.println("All threads have finished execution.");
         histogram.print();
-        System.out.println("Total execution time: " + duration.toMillis() + " milliseconds");
+        System.out.println(numberOfStoppingTimes + " " + threadNumber + " " + duration.toMillis() + " milliseconds");
     }
 }
 
